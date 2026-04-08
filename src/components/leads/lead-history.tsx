@@ -1,5 +1,5 @@
 
-import { LeadHistory as LeadHistoryType, STATUS_NAMES, LeadStatus } from "@/types/lead";
+import { LeadHistory as LeadHistoryType, STATUS_NAMES } from "@/types/lead";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -8,19 +8,20 @@ interface LeadHistoryProps {
   history: LeadHistoryType[];
 }
 
-const STATUS_COLORS: Record<LeadStatus, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
+const STATUS_COLORS: Record<string, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
   "new": "info",
   "in-work": "warning",
   "visit": "warning",
-  "test": "warning",
   "thinking": "default",
   "callback": "warning",
-  "signed": "success",
   "bought": "success",
   "no-answer": "danger",
+  "defect": "danger",
+  // Fallbacks for old statuses
+  "signed": "success",
   "decline": "danger",
   "bank-decline": "danger",
-  "defect": "danger",
+  "test": "warning",
 };
 
 export function LeadHistory({ history }: LeadHistoryProps) {
@@ -38,8 +39,8 @@ export function LeadHistory({ history }: LeadHistoryProps) {
             
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-8">
-                <Badge variant={STATUS_COLORS[item.status]}>
-                  {STATUS_NAMES[item.status]}
+                <Badge variant={STATUS_COLORS[item.status] || "default"}>
+                  {STATUS_NAMES[item.status] || item.status}
                 </Badge>
                 <span className="text-caption text-textMuted">
                   {format(item.changedAt, "d MMM yyyy, HH:mm", { locale: ru })}

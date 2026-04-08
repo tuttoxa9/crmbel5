@@ -55,7 +55,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-32">
           <h1 className="text-[28px] font-bold text-textPrimary tracking-tight">
-            БелАвтоЦентр
+            Белавто центр
           </h1>
           <p className="text-textMuted mt-8">Войдите в систему</p>
         </div>

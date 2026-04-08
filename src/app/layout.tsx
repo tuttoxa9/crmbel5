@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClientLayout } from "@/components/layout/client-layout";
 import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+const montserrat = Montserrat({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "БелАвтоЦентр CRM",
+  title: "Белавто центр CRM",
   description: "CRM система для автодилера",
   icons: {
     icon: '/favicon.ico',
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen antialiased`}>
+      <body className={`${montserrat.className} min-h-screen antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
