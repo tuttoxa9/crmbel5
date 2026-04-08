@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { format, addDays, subDays, startOfDay, isBefore, isSameDay } from "date-fns";
 import { ru } from "date-fns/locale";
+import { LeadDrawer } from "@/components/leads/lead-drawer";
 
 type ViewMode = "kanban" | "table";
 
@@ -20,8 +21,17 @@ export default function LeadsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredLeads = leads.filter((lead) => {
+    // 0. Table Filters (Source & Status) - only matter if we are in table mode, but we can apply them globally
+    if (viewMode === "table") {
+      if (sourceFilter !== "all" && lead.source !== sourceFilter) return false;
+      if (statusFilter !== "all" && lead.status !== statusFilter) return false;
+    }
+
     // 1. Text Search Filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -82,30 +92,63 @@ export default function LeadsPage() {
       </div>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-12 mb-24 shrink-0">
-        <div className="flex items-center gap-12">
-          <div className="relative w-[240px] md:w-[300px]">
-            <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
+        <div className="flex flex-wrap items-center gap-12">
+          <div className="relative w-[240px]">
+            <Search className="absolute left-10 top-1/2 -translate-y-1/2 w-14 h-14 text-textMuted" strokeWidth={1.5} />
             <Input
               placeholder="Поиск..."
-              className="pl-40 h-[36px]"
+              className="pl-32 h-[32px] text-[13px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
+          {viewMode === "table" && (
+            <>
+              <select
+                value={sourceFilter}
+                onChange={e => setSourceFilter(e.target.value)}
+                className="h-[32px] bg-surfaceSecondary border border-border rounded-[6px] px-8 text-[13px] text-textPrimary focus:outline-none"
+              >
+                <option value="all">Все источники</option>
+                <option value="site">Сайт</option>
+                <option value="instagram">Instagram</option>
+                <option value="tiktok">TikTok</option>
+                <option value="call">Звонок</option>
+                <option value="walk-in">С улицы</option>
+              </select>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="h-[32px] bg-surfaceSecondary border border-border rounded-[6px] px-8 text-[13px] text-textPrimary focus:outline-none"
+              >
+                <option value="all">Все статусы</option>
+                <option value="new">Новый</option>
+                <option value="in-work">В работе</option>
+                <option value="visit">Приезд</option>
+                <option value="success">Сделка</option>
+                <option value="no-answer">Не дозвон</option>
+                <option value="decline">Отказ</option>
+                <option value="bank-decline">Отказ банка</option>
+                <option value="defect">Брак / Тест</option>
+              </select>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-8 bg-surface border border-border rounded-md p-4">
+        {viewMode === "kanban" && (
+        <div className="flex items-center gap-4 bg-surface border border-border rounded-[8px] p-[2px]">
           <button
             onClick={handlePrevDay}
-            className="p-6 text-textMuted hover:bg-hover hover:text-textPrimary rounded-sm transition-colors"
+            className="p-4 text-textMuted hover:bg-hover hover:text-textPrimary rounded-[6px] transition-colors"
           >
-            <ChevronLeft className="w-16 h-16" strokeWidth={1.5} />
+            <ChevronLeft className="w-14 h-14" strokeWidth={2} />
           </button>
 
-          <div className="flex items-center gap-8 px-12 relative group cursor-pointer">
-             <CalendarIcon className="w-14 h-14 text-accent" strokeWidth={1.5} />
-             <span className="text-body-bold text-textPrimary capitalize min-w-[100px] text-center">
-               {format(selectedDate, "d MMMM", { locale: ru })}
+          <div className="flex items-center gap-6 px-8 relative group cursor-pointer hover:bg-hover rounded-[6px] transition-colors h-[28px]">
+             <CalendarIcon className="w-12 h-12 text-accent" strokeWidth={2} />
+             <span className="text-[13px] font-bold text-textPrimary capitalize min-w-[80px] text-center">
+               {format(selectedDate, "d MMM", { locale: ru })}
              </span>
              {/* Note: In a full app, we'd add a popover with DayPicker here */}
              <input
@@ -120,21 +163,22 @@ export default function LeadsPage() {
 
           <button
             onClick={handleNextDay}
-            className="p-6 text-textMuted hover:bg-hover hover:text-textPrimary rounded-sm transition-colors"
+            className="p-4 text-textMuted hover:bg-hover hover:text-textPrimary rounded-[6px] transition-colors"
           >
-            <ChevronRight className="w-16 h-16" strokeWidth={1.5} />
+            <ChevronRight className="w-14 h-14" strokeWidth={2} />
           </button>
 
           {/* Quick jump to today */}
           {!isSameDay(selectedDate, new Date()) && (
             <button
               onClick={() => setSelectedDate(startOfDay(new Date()))}
-              className="ml-4 px-8 text-caption text-accent hover:underline border-l border-border pl-12"
+              className="ml-2 px-6 h-[28px] text-[12px] font-medium text-accent hover:bg-accent/5 rounded-[6px] transition-colors"
             >
               Сегодня
             </button>
           )}
         </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -147,15 +191,20 @@ export default function LeadsPage() {
             Ошибка загрузки лидов
           </div>
         ) : viewMode === "kanban" ? (
-          <KanbanBoard leads={filteredLeads} />
+          <KanbanBoard leads={filteredLeads} onLeadClick={setSelectedLeadId} />
         ) : (
-          <LeadTable leads={filteredLeads} />
+          <LeadTable leads={filteredLeads} onLeadClick={setSelectedLeadId} />
         )}
       </div>
 
       <CreateLeadModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 
+      />
+
+      <LeadDrawer
+        leadId={selectedLeadId}
+        onClose={() => setSelectedLeadId(null)}
       />
     </div>
   );

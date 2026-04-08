@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 interface LeadTableProps {
   leads: Lead[];
+  onLeadClick?: (id: string) => void;
 }
 
 const STATUS_COLORS: Record<LeadStatus, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
@@ -23,7 +24,7 @@ const STATUS_COLORS: Record<LeadStatus, "default" | "success" | "warning" | "dan
   "defect": "danger",
 };
 
-export function LeadTable({ leads }: LeadTableProps) {
+export function LeadTable({ leads, onLeadClick }: LeadTableProps) {
   const router = useRouter();
 
   return (
@@ -43,7 +44,7 @@ export function LeadTable({ leads }: LeadTableProps) {
           {leads.map((lead) => (
             <tr 
               key={lead.id}
-              onClick={() => router.push(`/leads/${lead.id}`)}
+              onClick={() => onLeadClick ? onLeadClick(lead.id) : router.push(`/leads/${lead.id}`)}
               className="hover:bg-hover cursor-pointer transition-colors"
             >
               <td className="px-16 py-12">
