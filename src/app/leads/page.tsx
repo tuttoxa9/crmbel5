@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, LayoutGrid, List } from "lucide-react";
+import { Plus, LayoutGrid, List, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeads } from "@/hooks/use-leads";
 import { CreateLeadModal } from "@/components/leads/create-lead-modal";
@@ -9,6 +9,8 @@ import { KanbanBoard } from "@/components/leads/kanban-board";
 import { LeadTable } from "@/components/leads/lead-table";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { format, addDays, subDays, startOfDay, isBefore, isSameDay } from "date-fns";
+import { ru } from "date-fns/locale";
 
 type ViewMode = "kanban" | "table";
 
@@ -17,15 +19,35 @@ export default function LeadsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
 
   const filteredLeads = leads.filter((lead) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      lead.name.toLowerCase().includes(query) ||
-      (lead.phone && lead.phone.toLowerCase().includes(query))
-    );
+    // 1. Text Search Filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = lead.name.toLowerCase().includes(query) ||
+        (lead.phone && lead.phone.toLowerCase().includes(query));
+      if (!matchesSearch) return false;
+    }
+
+    // 2. Date Filter
+    const targetDate = lead.nextActionDate ? startOfDay(new Date(lead.nextActionDate)) : startOfDay(new Date(lead.createdAt));
+
+    // If selected date is "Today", also include leads that are overdue (their targetDate is before today)
+    const today = startOfDay(new Date());
+    const isSelectedToday = isSameDay(selectedDate, today);
+
+    if (isSelectedToday) {
+      // Return true if it's assigned to today OR in the past (overdue)
+      return isSameDay(targetDate, selectedDate) || isBefore(targetDate, selectedDate);
+    } else {
+      // Return true only if it strictly matches the selected date
+      return isSameDay(targetDate, selectedDate);
+    }
   });
+
+  const handlePrevDay = () => setSelectedDate(subDays(selectedDate, 1));
+  const handleNextDay = () => setSelectedDate(addDays(selectedDate, 1));
 
   return (
     <div className="h-full flex flex-col">
@@ -59,17 +81,60 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-12 mb-24 shrink-0">
-        <div className="relative w-[300px]">
-          <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
-          <Input 
-            placeholder="Поиск по имени или телефону..." 
-            className="pl-40"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-12 mb-24 shrink-0">
+        <div className="flex items-center gap-12">
+          <div className="relative w-[240px] md:w-[300px]">
+            <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
+            <Input
+              placeholder="Поиск..."
+              className="pl-40 h-[36px]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-        {/* TODO: Add more filters here */}
+
+        <div className="flex items-center gap-8 bg-surface border border-border rounded-md p-4">
+          <button
+            onClick={handlePrevDay}
+            className="p-6 text-textMuted hover:bg-hover hover:text-textPrimary rounded-sm transition-colors"
+          >
+            <ChevronLeft className="w-16 h-16" strokeWidth={1.5} />
+          </button>
+
+          <div className="flex items-center gap-8 px-12 relative group cursor-pointer">
+             <CalendarIcon className="w-14 h-14 text-accent" strokeWidth={1.5} />
+             <span className="text-body-bold text-textPrimary capitalize min-w-[100px] text-center">
+               {format(selectedDate, "d MMMM", { locale: ru })}
+             </span>
+             {/* Note: In a full app, we'd add a popover with DayPicker here */}
+             <input
+               type="date"
+               className="absolute inset-0 opacity-0 cursor-pointer"
+               value={format(selectedDate, "yyyy-MM-dd")}
+               onChange={(e) => {
+                 if (e.target.value) setSelectedDate(startOfDay(new Date(e.target.value)));
+               }}
+             />
+          </div>
+
+          <button
+            onClick={handleNextDay}
+            className="p-6 text-textMuted hover:bg-hover hover:text-textPrimary rounded-sm transition-colors"
+          >
+            <ChevronRight className="w-16 h-16" strokeWidth={1.5} />
+          </button>
+
+          {/* Quick jump to today */}
+          {!isSameDay(selectedDate, new Date()) && (
+            <button
+              onClick={() => setSelectedDate(startOfDay(new Date()))}
+              className="ml-4 px-8 text-caption text-accent hover:underline border-l border-border pl-12"
+            >
+              Сегодня
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 relative">

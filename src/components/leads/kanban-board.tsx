@@ -7,24 +7,23 @@ import { Clock, Car } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { isBefore, startOfDay, isSameDay } from "date-fns";
 
 interface KanbanBoardProps {
   leads: Lead[];
 }
 
 const COLUMNS: LeadStatus[] = [
-  "new", "in-work", "visit", "test", "thinking", "callback", "signed", "bought", "no-answer", "decline", "bank-decline", "defect"
+  "new", "in-work", "visit", "thinking", "callback", "success", "no-answer", "decline", "bank-decline", "defect"
 ];
 
 const STATUS_COLORS: Record<LeadStatus, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
   "new": "info",
   "in-work": "warning",
   "visit": "warning",
-  "test": "warning",
   "thinking": "default",
   "callback": "warning",
-  "signed": "success",
-  "bought": "success",
+  "success": "success",
   "no-answer": "danger",
   "decline": "danger",
   "bank-decline": "danger",
@@ -50,65 +49,71 @@ export function KanbanBoard({ leads }: KanbanBoardProps) {
               <Badge variant="outline" className="text-textMuted">{columnLeads.length}</Badge>
             </div>
             
-            <div className="flex-1 overflow-y-auto space-y-12 pr-4 pb-32">
-              {columnLeads.map((lead) => (
-                <motion.div
-                  key={lead.id}
-                  layoutId={lead.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="card-base p-16 rounded-[12px] cursor-pointer relative group"
-                  onClick={() => router.push(`/leads/${lead.id}`)}
-                >
-                  <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <h4 className="text-body-bold text-textPrimary">{lead.name}</h4>
-                      {lead.phone && (
-                        <a 
-                          href={`tel:${lead.phone}`} 
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-caption text-textMuted hover:text-accent transition-colors block mt-2"
-                        >
-                          {lead.phone}
-                        </a>
-                      )}
-                    </div>
-                    <Badge variant={STATUS_COLORS[status]}>
-                      {SOURCE_NAMES[lead.source]}
-                    </Badge>
-                  </div>
+            <div className="flex-1 overflow-y-auto space-y-8 pr-4 pb-32">
+              {columnLeads.map((lead) => {
+                const targetDate = lead.nextActionDate ? new Date(lead.nextActionDate) : new Date(lead.createdAt);
+                const isOverdue = isBefore(startOfDay(targetDate), startOfDay(new Date()));
+                const showRedBadge = isOverdue && !isSameDay(targetDate, new Date());
 
-                  {lead.car && (
-                    <div className="flex items-center gap-6 mt-8 text-caption text-textPrimary">
-                      <Car className="w-14 h-14 text-textMuted" strokeWidth={1.5} />
-                      <span>{lead.car}</span>
-                    </div>
-                  )}
-
-                  {lead.notes && (
-                    <p className="mt-8 text-caption text-textMuted line-clamp-2 leading-relaxed">
-                      {lead.notes}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between mt-16 pt-12 border-t border-border">
-                    {lead.nextActionDate ? (
-                      <div className="flex items-center gap-6 text-caption text-accent bg-accent/5 px-6 py-2 rounded-sm">
-                        <Clock className="w-14 h-14" strokeWidth={1.5} />
-                        <span>
-                          {format(lead.nextActionDate, "d MMM", { locale: ru })}
-                          {lead.nextActionTime && `, ${lead.nextActionTime}`}
-                        </span>
+                return (
+                  <motion.div
+                    key={lead.id}
+                    layoutId={lead.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card-base p-12 rounded-[10px] cursor-pointer relative group"
+                    onClick={() => router.push(`/leads/${lead.id}`)}
+                  >
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-textPrimary">{lead.name}</h4>
+                        {lead.phone && (
+                          <a
+                            href={`tel:${lead.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-[12px] text-textMuted hover:text-accent transition-colors block mt-2"
+                          >
+                            {lead.phone}
+                          </a>
+                        )}
                       </div>
-                    ) : (
-                      <div />
+                      <Badge variant={STATUS_COLORS[status]} className="scale-90 origin-top-right">
+                        {SOURCE_NAMES[lead.source]}
+                      </Badge>
+                    </div>
+
+                    {lead.car && (
+                      <div className="flex items-center gap-4 mt-6 text-[12px] text-textPrimary">
+                        <Car className="w-12 h-12 text-textMuted" strokeWidth={1.5} />
+                        <span className="truncate">{lead.car}</span>
+                      </div>
                     )}
-                    <span className="text-[11px] text-textMuted">
-                      {format(lead.createdAt, "HH:mm")}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+
+                    {lead.notes && (
+                      <p className="mt-6 text-[12px] text-textMuted line-clamp-2 leading-relaxed">
+                        {lead.notes}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between mt-12 pt-8 border-t border-border">
+                      {lead.nextActionDate ? (
+                        <div className={`flex items-center gap-4 text-[11px] px-4 py-[2px] rounded-sm ${showRedBadge ? "text-[#FF3B30] bg-[#FF3B30]/10" : "text-accent bg-accent/5"}`}>
+                          <Clock className="w-10 h-10" strokeWidth={1.5} />
+                          <span>
+                            {format(lead.nextActionDate, "d MMM", { locale: ru })}
+                            {lead.nextActionTime && `, ${lead.nextActionTime}`}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-textMuted">Без даты</span>
+                      )}
+                      <span className="text-[10px] text-textMuted">
+                        {format(lead.createdAt, "HH:mm")}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
               
               {columnLeads.length === 0 && (
                 <div className="h-full min-h-[100px] border-2 border-dashed border-border rounded-[12px] flex items-center justify-center text-caption text-textMuted">

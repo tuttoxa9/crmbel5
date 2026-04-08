@@ -16,11 +16,9 @@ const STATUS_COLORS: Record<LeadStatus, string> = {
   "new": "#0A84FF",
   "in-work": "#FF9F0A",
   "visit": "#FF9F0A",
-  "test": "#FF9F0A",
   "thinking": "#8E8E93",
   "callback": "#FF9F0A",
-  "signed": "#32D74B",
-  "bought": "#32D74B",
+  "success": "#32D74B",
   "no-answer": "#FF453A",
   "decline": "#FF453A",
   "bank-decline": "#FF453A",
@@ -43,7 +41,7 @@ export default function AnalyticsPage() {
   // Metrics
   const totalLeads = filteredLeads.length;
   const newToday = leads.filter(l => isSameDay(new Date(l.createdAt), new Date())).length;
-  const boughtLeads = filteredLeads.filter(l => l.status === "bought").length;
+  const boughtLeads = filteredLeads.filter(l => l.status === "success").length;
   const conversionRate = totalLeads > 0 ? Math.round((boughtLeads / totalLeads) * 100) : 0;
 
   // Chart Data (Line)

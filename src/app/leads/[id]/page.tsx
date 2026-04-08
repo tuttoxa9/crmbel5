@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, collection, query, orderBy, onSnapshot, updateDoc, addDoc } from "firebase/firestore";
+import { doc, collection, query, onSnapshot, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import { Lead, LeadHistory as LeadHistoryType, SOURCE_NAMES } from "@/types/lead";
 import { ArrowLeft, Edit2,  Phone, Calendar } from "lucide-react";
@@ -57,7 +57,7 @@ export default function LeadPage() {
       }
     });
 
-    const historyQ = query(collection(db!, `leads/${id}/history`), orderBy("changedAt", "desc"));
+    const historyQ = query(collection(db!, `leads/${id}/history`));
     const historyUnsub = onSnapshot(historyQ, (snapshot) => {
       const h: LeadHistoryType[] = [];
       snapshot.forEach((doc) => {
@@ -158,23 +158,23 @@ export default function LeadPage() {
         <div className="space-y-16 overflow-y-auto pr-8 pb-32">
           
           {/* Info Card */}
-          <div className="card-base p-20 rounded-[12px] relative">
+          <div className="card-base p-16 rounded-[10px] relative">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute top-16 right-16 text-textMuted hover:text-accent"
+              className="absolute top-12 right-12 text-textMuted hover:text-accent h-[32px] w-[32px]"
               onClick={() => setIsEditModalOpen(true)}
             >
-              <Edit2 strokeWidth={1.5} className="w-18 h-18" />
+              <Edit2 strokeWidth={1.5} className="w-14 h-14" />
             </Button>
             
-            <h3 className="text-caption-bold text-textMuted uppercase tracking-wider mb-16">
+            <h3 className="text-[11px] font-bold text-textMuted uppercase tracking-wider mb-12">
               Информация о клиенте
             </h3>
             
-            <div className="space-y-12">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8 border-b border-border">
-                <span className="text-textMuted">Телефон</span>
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-6 border-b border-border">
+                <span className="text-[13px] text-textMuted">Телефон</span>
                 {lead.phone ? (
                   <div className="flex items-center gap-12 mt-4 sm:mt-0">
                     <span className="text-textPrimary font-medium">{lead.phone}</span>
@@ -190,19 +190,19 @@ export default function LeadPage() {
                 )}
               </div>
               
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8 border-b border-border">
-                <span className="text-textMuted">Автомобиль</span>
-                <span className="text-textPrimary font-medium mt-4 sm:mt-0">{lead.car || "-"}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-6 border-b border-border">
+                <span className="text-[13px] text-textMuted">Автомобиль</span>
+                <span className="text-[13px] text-textPrimary font-medium mt-4 sm:mt-0">{lead.car || "-"}</span>
               </div>
               
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8 border-b border-border">
-                <span className="text-textMuted">Источник</span>
-                <span className="text-textPrimary font-medium mt-4 sm:mt-0">{SOURCE_NAMES[lead.source]}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-6 border-b border-border">
+                <span className="text-[13px] text-textMuted">Источник</span>
+                <span className="text-[13px] text-textPrimary font-medium mt-4 sm:mt-0">{SOURCE_NAMES[lead.source]}</span>
               </div>
               
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-8">
-                <span className="text-textMuted">Создан</span>
-                <span className="text-textPrimary mt-4 sm:mt-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-6">
+                <span className="text-[13px] text-textMuted">Создан</span>
+                <span className="text-[13px] text-textPrimary mt-4 sm:mt-0">
                   {format(lead.createdAt, "d MMM yyyy, HH:mm", { locale: ru })}
                 </span>
               </div>
@@ -212,36 +212,36 @@ export default function LeadPage() {
           <StatusSelector leadId={id} currentStatus={lead.status} />
 
           {/* Notes Card */}
-          <div className="card-base p-20 rounded-[12px]">
-            <h3 className="text-caption-bold text-textMuted uppercase tracking-wider mb-16">
+          <div className="card-base p-16 rounded-[10px]">
+            <h3 className="text-[11px] font-bold text-textMuted uppercase tracking-wider mb-12">
               Заметка
             </h3>
             <Textarea 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="mb-12 min-h-[120px]"
-              placeholder="Добавьте важную информацию о клиенте..."
+              className="mb-12 min-h-[80px]"
             />
             <Button 
+              size="sm"
               onClick={saveNotes} 
               isLoading={isSavingNotes}
               disabled={notes === (lead.notes || "")}
             >
-              Сохранить заметку
+              Сохранить
             </Button>
           </div>
 
           {/* Next Action Card */}
-          <div className="card-base p-20 rounded-[12px]">
-            <h3 className="text-caption-bold text-textMuted uppercase tracking-wider mb-16">
+          <div className="card-base p-16 rounded-[10px]">
+            <h3 className="text-[11px] font-bold text-textMuted uppercase tracking-wider mb-12">
               Следующее действие
             </h3>
-            <div className="flex flex-col sm:flex-row gap-16 items-start sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-12 items-start sm:items-center">
               <div className="flex-1 w-full relative">
-                <Calendar className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
+                <Calendar className="absolute left-10 top-1/2 -translate-y-1/2 w-14 h-14 text-textMuted" strokeWidth={1.5} />
                 <Input 
                   type="date" 
-                  className="pl-40"
+                  className="pl-32 h-[36px]"
                   value={nextDate}
                   onChange={(e) => setNextDate(e.target.value)}
                 />
@@ -249,18 +249,19 @@ export default function LeadPage() {
               <div className="w-full sm:w-[120px]">
                 <Input 
                   type="time" 
+                  className="h-[36px]"
                   value={nextTime}
                   onChange={(e) => setNextTime(e.target.value)}
                 />
               </div>
             </div>
-            <div className="flex gap-12 mt-16">
-              <Button onClick={saveNextAction} isLoading={isSavingAction}>
-                Сохранить
+            <div className="flex gap-12 mt-12">
+              <Button size="sm" onClick={saveNextAction} isLoading={isSavingAction}>
+                Установить
               </Button>
               {(lead.nextActionDate || lead.nextActionTime) && (
-                <Button variant="secondary" onClick={clearNextAction} disabled={isSavingAction}>
-                  Очистить
+                <Button size="sm" variant="secondary" onClick={clearNextAction} disabled={isSavingAction}>
+                  Сброс
                 </Button>
               )}
             </div>
