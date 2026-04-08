@@ -27,7 +27,7 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-[240px] h-screen bg-surface border-r border-border sticky top-0">
       <div className="p-24 pb-12">
         <h1 className="text-[20px] font-bold tracking-tight text-textPrimary">
-          БелАвтоЦентр
+          Белавто центр
         </h1>
       </div>
 

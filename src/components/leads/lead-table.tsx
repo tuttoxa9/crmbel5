@@ -1,6 +1,6 @@
 "use client";
 
-import { Lead, STATUS_NAMES, SOURCE_NAMES, LeadStatus } from "@/types/lead";
+import { Lead, STATUS_NAMES, SOURCE_NAMES } from "@/types/lead";
 import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,19 +10,20 @@ interface LeadTableProps {
   leads: Lead[];
 }
 
-const STATUS_COLORS: Record<LeadStatus, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
+const STATUS_COLORS: Record<string, "default" | "success" | "warning" | "danger" | "info" | "outline"> = {
   "new": "info",
   "in-work": "warning",
   "visit": "warning",
-  "test": "warning",
   "thinking": "default",
   "callback": "warning",
-  "signed": "success",
   "bought": "success",
   "no-answer": "danger",
+  "defect": "danger",
+  // old fallbacks
+  "signed": "success",
   "decline": "danger",
   "bank-decline": "danger",
-  "defect": "danger",
+  "test": "warning",
 };
 
 export function LeadTable({ leads }: LeadTableProps) {
@@ -65,7 +66,7 @@ export function LeadTable({ leads }: LeadTableProps) {
                 <Badge variant="outline">{SOURCE_NAMES[lead.source]}</Badge>
               </td>
               <td className="px-16 py-12">
-                <Badge variant={STATUS_COLORS[lead.status]}>{STATUS_NAMES[lead.status]}</Badge>
+                <Badge variant={STATUS_COLORS[lead.status] || "default"}>{STATUS_NAMES[lead.status] || lead.status}</Badge>
               </td>
               <td className="px-16 py-12 text-textPrimary">
                 {lead.nextActionDate ? (

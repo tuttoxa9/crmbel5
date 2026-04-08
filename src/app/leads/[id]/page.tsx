@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { doc, collection, query, orderBy, onSnapshot, updateDoc, addDoc } from "firebase/firestore";
+import { doc, collection, query, onSnapshot, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase";
 import { Lead, LeadHistory as LeadHistoryType, SOURCE_NAMES } from "@/types/lead";
 import { ArrowLeft, Edit2,  Phone, Calendar } from "lucide-react";
@@ -57,13 +57,19 @@ export default function LeadPage() {
       }
     });
 
-    const historyQ = query(collection(db!, `leads/${id}/history`), orderBy("changedAt", "desc"));
+    // FireStore requires an index for orderBy. If missing, this might fail silently or log to console.
+    // Let's remove orderBy to see if that fixes "История пуста". We can sort on the client side.
+    const historyQ = query(collection(db!, `leads/${id}/history`));
     const historyUnsub = onSnapshot(historyQ, (snapshot) => {
       const h: LeadHistoryType[] = [];
       snapshot.forEach((doc) => {
         h.push({ id: doc.id, ...doc.data() } as LeadHistoryType);
       });
+      // Sort history descending by changedAt timestamp on the client side
+      h.sort((a, b) => (b.changedAt || 0) - (a.changedAt || 0));
       setHistory(h);
+    }, (error) => {
+      console.error("Error fetching history:", error);
     });
 
     return () => {

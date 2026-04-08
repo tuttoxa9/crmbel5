@@ -12,19 +12,20 @@ import {
 
 type Period = "week" | "month" | "quarter";
 
-const STATUS_COLORS: Record<LeadStatus, string> = {
+const STATUS_COLORS: Record<string, string> = {
   "new": "#0A84FF",
   "in-work": "#FF9F0A",
   "visit": "#FF9F0A",
-  "test": "#FF9F0A",
   "thinking": "#8E8E93",
   "callback": "#FF9F0A",
-  "signed": "#32D74B",
   "bought": "#32D74B",
   "no-answer": "#FF453A",
+  "defect": "#FF453A",
+  // old fallback statuses
+  "signed": "#32D74B",
   "decline": "#FF453A",
   "bank-decline": "#FF453A",
-  "defect": "#FF453A",
+  "test": "#FF9F0A",
 };
 
 const PIE_COLORS = ["#0A84FF", "#32D74B", "#FF9F0A", "#FF453A", "#BF5AF2"];

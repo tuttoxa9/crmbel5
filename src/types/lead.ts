@@ -4,13 +4,9 @@ export type LeadStatus =
   | "new" 
   | "in-work" 
   | "visit" 
-  | "signed" 
   | "bought" 
   | "no-answer" 
-  | "decline" 
-  | "bank-decline" 
   | "defect" 
-  | "test" 
   | "thinking" 
   | "callback";
 
@@ -35,19 +31,20 @@ export interface Lead {
   updatedAt: number; // Unix timestamp
 }
 
-export const STATUS_NAMES: Record<LeadStatus, string> = {
+export const STATUS_NAMES: Record<string, string> = {
   "new": "Новый",
   "in-work": "В работе",
   "visit": "Приезд",
-  "signed": "Оформился",
-  "bought": "Купил",
+  "bought": "Оформился/Купил",
   "no-answer": "Не дозвон",
-  "decline": "Отказ",
-  "bank-decline": "Отказ банка",
-  "defect": "Брак",
-  "test": "Тест",
+  "defect": "Брак/Тест/Отказ",
   "thinking": "Думает",
   "callback": "Перезвонить",
+  // Fallbacks for old statuses
+  "signed": "Оформился/Купил",
+  "decline": "Брак/Тест/Отказ",
+  "bank-decline": "Брак/Тест/Отказ",
+  "test": "Брак/Тест/Отказ",
 };
 
 export const SOURCE_NAMES: Record<LeadSource, string> = {

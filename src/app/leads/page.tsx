@@ -8,7 +8,9 @@ import { CreateLeadModal } from "@/components/leads/create-lead-modal";
 import { KanbanBoard } from "@/components/leads/kanban-board";
 import { LeadTable } from "@/components/leads/lead-table";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { format, addDays, subDays, startOfDay } from "date-fns";
+import { ru } from "date-fns/locale";
 
 type ViewMode = "kanban" | "table";
 
@@ -17,14 +19,17 @@ export default function LeadsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date>(startOfDay(new Date()));
 
   const filteredLeads = leads.filter((lead) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      lead.name.toLowerCase().includes(query) ||
-      (lead.phone && lead.phone.toLowerCase().includes(query))
-    );
+    // 1. Search Query filtering
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = lead.name.toLowerCase().includes(query) || (lead.phone && lead.phone.toLowerCase().includes(query));
+      if (!matchesSearch) return false;
+    }
+
+    return true; // The date logic is applied in KanbanBoard so it can show the "old" labels
   });
 
   return (
@@ -59,17 +64,52 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-12 mb-24 shrink-0">
-        <div className="relative w-[300px]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-12 mb-24 shrink-0 justify-between">
+        <div className="flex items-center gap-12">
+          <div className="flex items-center bg-surface border border-border rounded-md p-4">
+            <button
+              onClick={() => setSelectedDate(prev => subDays(prev, 1))}
+              className="p-8 hover:bg-hover rounded-sm text-textMuted hover:text-textPrimary transition-colors"
+            >
+              <ChevronLeft className="w-16 h-16" strokeWidth={1.5} />
+            </button>
+            <div className="flex items-center gap-8 px-12 min-w-[140px] justify-center">
+              <CalendarIcon className="w-14 h-14 text-accent" strokeWidth={1.5} />
+              <span className="text-body-bold text-textPrimary capitalize">
+                {format(selectedDate, "d MMMM", { locale: ru })}
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedDate(prev => addDays(prev, 1))}
+              className="p-8 hover:bg-hover rounded-sm text-textMuted hover:text-textPrimary transition-colors"
+            >
+              <ChevronRight className="w-16 h-16" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          <div className="relative w-[240px]">
+            <Input
+              type="date"
+              value={format(selectedDate, "yyyy-MM-dd")}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setSelectedDate(startOfDay(new Date(e.target.value)));
+                }
+              }}
+              className="h-[42px]"
+            />
+          </div>
+        </div>
+
+        <div className="relative w-full sm:w-[300px]">
           <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
           <Input 
             placeholder="Поиск по имени или телефону..." 
-            className="pl-40"
+            className="pl-40 h-[42px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        {/* TODO: Add more filters here */}
       </div>
 
       <div className="flex-1 min-h-0 relative">
@@ -82,7 +122,7 @@ export default function LeadsPage() {
             Ошибка загрузки лидов
           </div>
         ) : viewMode === "kanban" ? (
-          <KanbanBoard leads={filteredLeads} />
+          <KanbanBoard leads={filteredLeads} selectedDate={selectedDate} />
         ) : (
           <LeadTable leads={filteredLeads} />
         )}

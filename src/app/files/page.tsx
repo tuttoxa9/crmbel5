@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import imageCompression from "browser-image-compression";
 import { 
   FolderPlus, Upload, File as FileIcon, Image as ImageIcon, 
-  Folder as FolderIcon,  Download, Trash2,   ChevronRight 
+  Folder as FolderIcon,  Download, Trash2,   ChevronRight, PenBox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -28,6 +28,10 @@ export default function FilesPage() {
   const [isMkdirModalOpen, setIsMkdirModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [itemToRename, setItemToRename] = useState<{key: string, isFolder: boolean} | null>(null);
+  const [newName, setNewName] = useState("");
+
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   
 
@@ -140,6 +144,46 @@ export default function FilesPage() {
     }
   };
 
+  const handleRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemToRename || !newName.trim()) return;
+
+    try {
+      const oldName = itemToRename.key.split('/').filter(Boolean).pop();
+      if (oldName === newName) {
+        setIsRenameModalOpen(false);
+        return;
+      }
+
+      const res = await fetch("/api/files/rename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          oldKey: itemToRename.key,
+          newName: newName,
+          isFolder: itemToRename.isFolder
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      toast.success("Успешно переименовано");
+      setIsRenameModalOpen(false);
+      setItemToRename(null);
+      setNewName("");
+      loadFiles();
+    } catch {
+      toast.error("Ошибка при переименовании");
+    }
+  };
+
+  const openRenameModal = (key: string, isFolder: boolean) => {
+    const name = key.split('/').filter(Boolean).pop() || "";
+    setItemToRename({ key, isFolder });
+    setNewName(name);
+    setIsRenameModalOpen(true);
+  };
+
   const handleDownload = (key: string) => {
     window.open(`/api/files/download?key=${encodeURIComponent(key)}`, "_blank");
   };
@@ -233,12 +277,20 @@ export default function FilesPage() {
                   <FolderIcon className="w-48 h-48 text-accent" strokeWidth={1} fill="currentColor" fillOpacity={0.2} />
                   <span className="text-caption text-textPrimary text-center w-full truncate">{name}</span>
                   
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleDelete(folderPrefix, true); }}
-                    className="absolute top-8 right-8 p-4 opacity-0 group-hover:opacity-100 text-textMuted hover:text-[#FF3B30] hover:bg-surface rounded-md transition-all"
-                  >
-                    <Trash2 className="w-16 h-16" />
-                  </button>
+                  <div className="absolute top-8 right-8 flex gap-4 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openRenameModal(folderPrefix, true); }}
+                      className="p-4 text-textMuted hover:text-accent hover:bg-surface rounded-md transition-all"
+                    >
+                      <PenBox className="w-16 h-16" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(folderPrefix, true); }}
+                      className="p-4 text-textMuted hover:text-[#FF3B30] hover:bg-surface rounded-md transition-all"
+                    >
+                      <Trash2 className="w-16 h-16" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -264,6 +316,12 @@ export default function FilesPage() {
                   <span className="text-caption text-textPrimary text-center w-full truncate px-4">{name}</span>
                   
                   <div className="absolute top-12 right-12 flex gap-4 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => openRenameModal(file.Key, false)}
+                      className="p-6 bg-surface border border-border shadow-card-sm text-textPrimary hover:text-accent rounded-md"
+                    >
+                      <PenBox className="w-14 h-14" />
+                    </button>
                     <button 
                       onClick={() => handleDownload(file.Key)}
                       className="p-6 bg-surface border border-border shadow-card-sm text-textPrimary hover:text-accent rounded-md"
@@ -302,6 +360,21 @@ export default function FilesPage() {
           <div className="flex gap-12">
             <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsMkdirModalOpen(false)}>Отмена</Button>
             <Button type="submit" className="flex-1">Создать</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isRenameModalOpen} onClose={() => setIsRenameModalOpen(false)} title="Переименовать">
+        <form onSubmit={handleRename} className="space-y-16">
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Новое имя"
+            autoFocus
+          />
+          <div className="flex gap-12">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsRenameModalOpen(false)}>Отмена</Button>
+            <Button type="submit" className="flex-1">Сохранить</Button>
           </div>
         </form>
       </Modal>
