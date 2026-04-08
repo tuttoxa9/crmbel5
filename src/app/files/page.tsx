@@ -296,7 +296,6 @@ export default function FilesPage() {
           <Input 
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
-            placeholder="Название папки"
             autoFocus
           />
           <div className="flex gap-12">

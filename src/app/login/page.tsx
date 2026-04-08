@@ -55,7 +55,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-32">
           <h1 className="text-[28px] font-bold text-textPrimary tracking-tight">
-            Белавто центр
+            Белавто Центр
           </h1>
           <p className="text-textMuted mt-8">Войдите в систему</p>
         </div>
@@ -69,7 +69,6 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@belautocenter.by"
               disabled={isLoading}
             />
           </div>
@@ -81,7 +80,6 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
               disabled={isLoading}
             />
           </div>
