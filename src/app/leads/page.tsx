@@ -1,22 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, LayoutGrid, List } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLeads } from "@/hooks/use-leads";
 import { CreateLeadModal } from "@/components/leads/create-lead-modal";
-import { KanbanBoard } from "@/components/leads/kanban-board";
-import { LeadTable } from "@/components/leads/lead-table";
+import { FeedSidebar } from "@/components/leads/feed-sidebar";
+import { LeadFeed } from "@/components/leads/lead-feed";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { LeadDrawer } from "@/components/leads/lead-drawer";
 
-type ViewMode = "kanban" | "table";
+export type FilterType =
+  | { type: "urgent" }
+  | { type: "today_calls" }
+  | { type: "today_visits" }
+  | { type: "status", status: string };
 
 export default function LeadsPage() {
   const { leads, loading, error } = useLeads();
-  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FilterType>({ type: "today_calls" });
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
   const filteredLeads = leads.filter((lead) => {
     if (!searchQuery) return true;
@@ -28,69 +33,58 @@ export default function LeadsPage() {
   });
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex flex-col gap-16 md:flex-row md:items-center justify-between mb-24 shrink-0">
-        <h1 className="text-page-title text-textPrimary">Лиды</h1>
-        
-        <div className="flex items-center gap-12">
-          <div className="flex bg-surfaceSecondary rounded-md border border-border p-4">
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`p-8 rounded-sm transition-colors ${
-                viewMode === "kanban" ? "bg-surface shadow-sm text-textPrimary" : "text-textMuted hover:text-textPrimary"
-              }`}
-            >
-              <LayoutGrid className="w-16 h-16" strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => setViewMode("table")}
-              className={`p-8 rounded-sm transition-colors ${
-                viewMode === "table" ? "bg-surface shadow-sm text-textPrimary" : "text-textMuted hover:text-textPrimary"
-              }`}
-            >
-              <List className="w-16 h-16" strokeWidth={1.5} />
-            </button>
+    <div className="h-[calc(100vh-130px)] flex gap-16 -m-16 md:-m-32 p-16 md:p-32 bg-background overflow-hidden">
+      {/* Sidebar Filters */}
+      <FeedSidebar
+        leads={leads}
+        activeFilter={activeFilter}
+        onSelectFilter={setActiveFilter}
+      />
+
+      {/* Main Feed Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-surface rounded-[16px] border border-border overflow-hidden">
+        <div className="h-64 flex items-center justify-between px-16 border-b border-border shrink-0">
+          <div className="relative w-[300px]">
+            <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
+            <Input
+              className="pl-40 h-32 text-caption bg-surfaceSecondary border-transparent focus:border-accent"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="w-16 h-16 mr-8" strokeWidth={1.5} />
-            Создать лид
+          <Button size="sm" className="h-32 px-16" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="w-14 h-14 mr-6" strokeWidth={1.5} />
+            Новый лид
           </Button>
         </div>
-      </div>
 
-      <div className="flex items-center gap-12 mb-24 shrink-0">
-        <div className="relative w-[300px]">
-          <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
-          <Input
-            placeholder="Поиск по имени или телефону..."
-            className="pl-40"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex-1 min-h-0 relative">
+          {loading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="w-32 h-32 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="absolute inset-0 flex items-center justify-center text-[#FF3B30]">
+              Ошибка загрузки лидов
+            </div>
+          ) : (
+            <LeadFeed
+              leads={filteredLeads}
+              filter={activeFilter}
+              onSelectLead={setSelectedLeadId}
+            />
+          )}
         </div>
-        {/* TODO: Add more filters here */}
-      </div>
-
-      <div className="flex-1 min-h-0 relative">
-        {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="w-32 h-32 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="absolute inset-0 flex items-center justify-center text-[#FF3B30]">
-            Ошибка загрузки лидов
-          </div>
-        ) : viewMode === "kanban" ? (
-          <KanbanBoard leads={filteredLeads} />
-        ) : (
-          <LeadTable leads={filteredLeads} />
-        )}
       </div>
 
       <CreateLeadModal 
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 
+      />
+
+      <LeadDrawer
+        leadId={selectedLeadId}
+        onClose={() => setSelectedLeadId(null)}
       />
     </div>
   );

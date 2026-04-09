@@ -3,24 +3,23 @@
 import { useState, useMemo } from "react";
 import { useLeads } from "@/hooks/use-leads";
 import { STATUS_NAMES, SOURCE_NAMES, LeadStatus } from "@/types/lead";
-import { format, subDays, isAfter, startOfDay,  isSameDay } from "date-fns";
+import { format, subDays, isAfter, startOfDay, isSameDay, isBefore, endOfDay } from "date-fns";
 import { ru } from "date-fns/locale";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from "recharts";
+import { Calendar as CalendarIcon } from "lucide-react";
 
-type Period = "week" | "month" | "quarter";
+type Period = "week" | "month" | "custom";
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   "new": "#0A84FF",
   "in-work": "#FF9F0A",
   "visit": "#FF9F0A",
-  "test": "#FF9F0A",
   "thinking": "#8E8E93",
   "callback": "#FF9F0A",
-  "signed": "#32D74B",
-  "bought": "#32D74B",
+  "success": "#32D74B",
   "no-answer": "#FF453A",
   "decline": "#FF453A",
   "bank-decline": "#FF453A",
@@ -33,27 +32,57 @@ export default function AnalyticsPage() {
   const { leads, loading } = useLeads();
   const [period, setPeriod] = useState<Period>("month");
 
+  const [customRange, setCustomRange] = useState({
+    startDate: subDays(new Date(), 30),
+    endDate: new Date()
+  });
+
   const filteredLeads = useMemo(() => {
     const now = new Date();
-    const daysToSubtract = period === "week" ? 7 : period === "month" ? 30 : 90;
-    const startDate = startOfDay(subDays(now, daysToSubtract));
-    return leads.filter(l => isAfter(new Date(l.createdAt), startDate));
-  }, [leads, period]);
+    let startDate: Date;
+    let endDate: Date = endOfDay(now);
+
+    if (period === "week") {
+      startDate = startOfDay(subDays(now, 7));
+    } else if (period === "month") {
+      startDate = startOfDay(subDays(now, 30));
+    } else {
+      startDate = startOfDay(customRange.startDate);
+      endDate = endOfDay(customRange.endDate);
+    }
+
+    return leads.filter(l => {
+      const createdAt = new Date(l.createdAt);
+      return isAfter(createdAt, startDate) && isBefore(createdAt, endDate);
+    });
+  }, [leads, period, customRange]);
 
   // Metrics
   const totalLeads = filteredLeads.length;
   const newToday = leads.filter(l => isSameDay(new Date(l.createdAt), new Date())).length;
-  const boughtLeads = filteredLeads.filter(l => l.status === "bought").length;
+  const boughtLeads = filteredLeads.filter(l => l.status === "success").length;
   const conversionRate = totalLeads > 0 ? Math.round((boughtLeads / totalLeads) * 100) : 0;
 
   // Chart Data (Line)
   const lineChartData = useMemo(() => {
     const data: Record<string, number> = {};
-    const daysToSubtract = period === "week" ? 7 : period === "month" ? 30 : 90;
+    let startDate: Date;
+    let endDate: Date = new Date();
+
+    if (period === "week") {
+      startDate = startOfDay(subDays(new Date(), 7));
+    } else if (period === "month") {
+      startDate = startOfDay(subDays(new Date(), 30));
+    } else {
+      startDate = startOfDay(customRange.startDate);
+      endDate = endOfDay(customRange.endDate);
+    }
+
+    const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     
     // Initialize days
-    for (let i = daysToSubtract; i >= 0; i--) {
-      const date = format(subDays(new Date(), i), "dd MMM", { locale: ru });
+    for (let i = diffDays; i >= 0; i--) {
+      const date = format(subDays(endDate, i), "dd MMM", { locale: ru });
       data[date] = 0;
     }
 
@@ -65,7 +94,7 @@ export default function AnalyticsPage() {
     });
 
     return Object.keys(data).map(date => ({ date, count: data[date] }));
-  }, [filteredLeads, period]);
+  }, [filteredLeads, period, customRange.startDate, customRange.endDate]);
 
   // Chart Data (Pie)
   const pieChartData = useMemo(() => {
@@ -118,27 +147,60 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-24">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-16">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-16">
         <h1 className="text-page-title text-textPrimary">Аналитика</h1>
         
-        <div className="flex bg-surfaceSecondary rounded-md border border-border p-4">
-          {(["week", "month", "quarter"] as const).map((p) => {
-            const labels = { week: "Неделя", month: "Месяц", quarter: "Квартал" };
-            const isActive = period === p;
-            return (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-16 py-8 rounded-sm text-caption-bold transition-colors ${
-                  isActive 
-                    ? "bg-surface shadow-sm text-textPrimary" 
-                    : "text-textMuted hover:text-textPrimary"
-                }`}
-              >
-                {labels[p]}
-              </button>
-            );
-          })}
+        <div className="flex flex-col sm:flex-row items-center gap-12">
+           {period === "custom" && (
+             <div className="flex items-center bg-surfaceSecondary rounded-md border border-border p-4 relative group">
+                <CalendarIcon className="w-16 h-16 ml-12 text-textMuted group-hover:text-textPrimary transition-colors" />
+                <div className="flex items-center px-12 h-32 gap-8 text-caption cursor-pointer">
+                  <span>{format(customRange.startDate, "dd.MM.yyyy")}</span>
+                  <span className="text-textMuted">-</span>
+                  <span>{format(customRange.endDate, "dd.MM.yyyy")}</span>
+                </div>
+                <input
+                  type="date"
+                  className="absolute left-0 top-0 w-1/2 h-full opacity-0 cursor-pointer"
+                  value={format(customRange.startDate, "yyyy-MM-dd")}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                       setCustomRange(prev => ({...prev, startDate: new Date(e.target.value)}));
+                    }
+                  }}
+                />
+                <input
+                  type="date"
+                  className="absolute right-0 top-0 w-1/2 h-full opacity-0 cursor-pointer"
+                  value={format(customRange.endDate, "yyyy-MM-dd")}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                       setCustomRange(prev => ({...prev, endDate: new Date(e.target.value)}));
+                    }
+                  }}
+                />
+             </div>
+           )}
+
+          <div className="flex bg-surfaceSecondary rounded-md border border-border p-4">
+            {(["week", "month", "custom"] as const).map((p) => {
+              const labels = { week: "Неделя", month: "Месяц", custom: "Период" };
+              const isActive = period === p;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-16 py-8 rounded-sm text-caption-bold transition-colors ${
+                    isActive
+                      ? "bg-surface shadow-sm text-textPrimary"
+                      : "text-textMuted hover:text-textPrimary"
+                  }`}
+                >
+                  {labels[p]}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

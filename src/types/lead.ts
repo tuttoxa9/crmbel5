@@ -4,13 +4,11 @@ export type LeadStatus =
   | "new" 
   | "in-work" 
   | "visit" 
-  | "signed"
-  | "bought"
+  | "success"
   | "no-answer" 
   | "decline" 
   | "bank-decline" 
   | "defect" 
-  | "test"
   | "thinking" 
   | "callback";
 
@@ -39,13 +37,11 @@ export const STATUS_NAMES: Record<LeadStatus, string> = {
   "new": "Новый",
   "in-work": "В работе",
   "visit": "Приезд",
-  "signed": "Оформился",
-  "bought": "Купил",
+  "success": "Успешно",
   "no-answer": "Не дозвон",
   "decline": "Отказ",
   "bank-decline": "Отказ банка",
   "defect": "Брак",
-  "test": "Тест",
   "thinking": "Думает",
   "callback": "Перезвонить",
 };
