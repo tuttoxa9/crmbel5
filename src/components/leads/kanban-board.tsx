@@ -64,8 +64,8 @@ export function KanbanBoard({ leads }: KanbanBoardProps) {
                     <div>
                       <h4 className="text-body-bold text-textPrimary">{lead.name}</h4>
                       {lead.phone && (
-                        <a 
-                          href={`tel:${lead.phone}`} 
+                        <a
+                          href={`tel:${lead.phone}`}
                           onClick={(e) => e.stopPropagation()}
                           className="text-caption text-textMuted hover:text-accent transition-colors block mt-2"
                         >

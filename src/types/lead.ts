@@ -4,13 +4,13 @@ export type LeadStatus =
   | "new" 
   | "in-work" 
   | "visit" 
-  | "signed" 
-  | "bought" 
+  | "signed"
+  | "bought"
   | "no-answer" 
   | "decline" 
   | "bank-decline" 
   | "defect" 
-  | "test" 
+  | "test"
   | "thinking" 
   | "callback";
 

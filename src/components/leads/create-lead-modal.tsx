@@ -89,7 +89,6 @@ export function CreateLeadModal({ isOpen, onClose }: CreateLeadModalProps) {
           <Input 
             value={name} 
             onChange={(e) => setName(e.target.value)} 
-            placeholder="Иван Иванов" 
             disabled={isLoading}
           />
         </div>
@@ -100,7 +99,6 @@ export function CreateLeadModal({ isOpen, onClose }: CreateLeadModalProps) {
             <Input 
               value={phone} 
               onChange={(e) => setPhone(e.target.value)} 
-              placeholder="+375 (29) 123-45-67" 
               disabled={isLoading}
             />
           </div>
@@ -109,7 +107,6 @@ export function CreateLeadModal({ isOpen, onClose }: CreateLeadModalProps) {
             <Input 
               value={car} 
               onChange={(e) => setCar(e.target.value)} 
-              placeholder="Geely Monjaro" 
               disabled={isLoading}
             />
           </div>
@@ -146,7 +143,6 @@ export function CreateLeadModal({ isOpen, onClose }: CreateLeadModalProps) {
           <Textarea 
             value={notes} 
             onChange={(e) => setNotes(e.target.value)} 
-            placeholder="Дополнительная информация..." 
             disabled={isLoading}
           />
         </div>

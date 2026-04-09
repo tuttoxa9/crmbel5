@@ -62,8 +62,8 @@ export default function LeadsPage() {
       <div className="flex items-center gap-12 mb-24 shrink-0">
         <div className="relative w-[300px]">
           <Search className="absolute left-12 top-1/2 -translate-y-1/2 w-16 h-16 text-textMuted" strokeWidth={1.5} />
-          <Input 
-            placeholder="Поиск по имени или телефону..." 
+          <Input
+            placeholder="Поиск по имени или телефону..."
             className="pl-40"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "БелАвтоЦентр CRM",
+  title: "Белавто Центр CRM",
   description: "CRM система для автодилера",
   icons: {
     icon: '/favicon.ico',

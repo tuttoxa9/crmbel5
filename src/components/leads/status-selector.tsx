@@ -13,7 +13,7 @@ interface StatusSelectorProps {
 }
 
 const ALL_STATUSES: LeadStatus[] = [
-  "new", "in-work", "visit", "test", "thinking", "callback", 
+  "new", "in-work", "visit", "test", "thinking", "callback",
   "signed", "bought", "no-answer", "decline", "bank-decline", "defect"
 ];
 
